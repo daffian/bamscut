@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Petugas - BAMSCUT</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: { DEFAULT: '#D4AF37', light: '#F0D060', dark: '#B8860B' },
+            dark: { DEFAULT: '#111111', light: '#1a1a1a', lighter: '#2a2a2a' }
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .service-card { transition: all 0.2s; }
+    .service-card:hover { transform: translateY(-2px); border-color: #D4AF37; }
+    .service-card.selected { border-color: #D4AF37; background: rgba(212,175,55,0.1); }
+    .pay-btn { transition: all 0.2s; }
+    .pay-btn.selected { background: #D4AF37; color: #111; border-color: #D4AF37; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @media print {
+      body * { visibility: hidden; }
+      #receiptArea, #receiptArea * { visibility: visible; }
+      #receiptArea { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
+    }
+  </style>
+</head>
+<body class="bg-dark text-white min-h-screen">
+  <!-- Header -->
+  <header class="bg-dark-light border-b border-dark-lighter sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center">
+          <svg class="w-5 h-5 text-dark" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <div>
+          <h1 class="text-gold font-bold text-lg leading-tight">BAMSCUT</h1>
+          <p class="text-xs text-gray-500">Petugas Panel</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="showSection('history')" id="btnHistory" class="px-3 py-2 text-sm rounded-lg text-gray-400 hover:text-gold hover:bg-dark-lighter transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </button>
+        <button onclick="logout()" class="px-3 py-2 text-sm rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-5xl mx-auto p-4">
+    
+    <!-- NEW TRANSACTION SECTION -->
+    <section id="section-new" class="fade-in">
+      <!-- Customer Input -->
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-gray-300 mb-2">Nama Pelanggan</label>
+        <input type="text" id="customerName" placeholder="Masukkan nama pelanggan (opsional)"
+          class="w-full px-4 py-3 bg-dark-light border border-dark-lighter rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-gold transition">
+      </div>
+
+      <!-- Services Grid -->
+      <div class="mb-5">
+        <h3 class="text-sm font-medium text-gray-300 mb-3">Pilih Layanan</h3>
+        <div id="servicesGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="col-span-full text-center text-gray-500 py-8">Memuat layanan...</div>
+        </div>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="mb-5">
+        <h3 class="text-sm font-medium text-gray-300 mb-3">Metode Pembayaran</h3>
+        <div class="grid grid-cols-3 gap-3">
+          <button onclick="selectPayment('Cash')" data-pay="Cash" class="pay-btn px-4 py-4 bg-dark-light border-2 border-dark-lighter rounded-xl text-center hover:border-gold transition">
+            <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            <span class="text-sm font-medium">Cash</span>
+          </button>
+          <button onclick="selectPayment('QRIS')" data-pay="QRIS" class="pay-btn px-4 py-4 bg-dark-light border-2 border-dark-lighter rounded-xl text-center hover:border-gold transition">
+            <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+            <span class="text-sm font-medium">QRIS</span>
+          </button>
+          <button onclick="selectPayment('Transfer')" data-pay="Transfer" class="pay-btn px-4 py-4 bg-dark-light border-2 border-dark-lighter rounded-xl text-center hover:border-gold transition">
+            <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            <span class="text-sm font-medium">Transfer</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="bg-dark-light rounded-2xl border border-dark-lighter p-5 mb-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-gray-400">Layanan:</span>
+          <span id="summaryService" class="font-medium">-</span>
+        </div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-gray-400">Pembayaran:</span>
+          <span id="summaryPayment" class="font-medium">-</span>
+        </div>
+        <div class="border-t border-dark-lighter pt-3 mt-3 flex items-center justify-between">
+          <span class="text-lg font-semibold">Total:</span>
+          <span id="summaryTotal" class="text-2xl font-bold text-gold">Rp 0</span>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <button onclick="processTransaction()" id="processBtn"
+        class="w-full py-4 bg-gradient-to-r from-gold to-gold-dark text-dark font-bold text-lg rounded-2xl hover:shadow-lg hover:shadow-gold/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span>Proses Transaksi</span>
+      </button>
+    </section>
+
+    <!-- HISTORY SECTION -->
+    <section id="section-history" class="hidden fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-xl font-bold">Riwayat Transaksi Saya</h2>
+        <button onclick="showSection('new')" class="px-4 py-2 bg-gold text-dark font-semibold rounded-xl hover:bg-gold-light transition text-sm">
+          + Transaksi Baru
+        </button>
+      </div>
+      <div id="historyList" class="space-y-3">
+        <div class="text-center text-gray-500 py-8">Memuat data...</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Receipt Modal -->
+  <div id="receiptModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white text-black rounded-2xl w-full max-w-sm overflow-hidden">
+      <div id="receiptArea" class="p-6">
+        <div class="text-center mb-4 border-b border-dashed border-gray-300 pb-4">
+          <h3 id="receiptShopName" class="text-xl font-bold">BAMSCUT</h3>
+          <p class="text-xs text-gray-600">Premium Barbershop</p>
+        </div>
+        <div class="space-y-2 text-sm mb-4">
+          <div class="flex justify-between"><span class="text-gray-600">No. Transaksi</span><span id="receiptId" class="font-mono font-medium">-</span></div>
+          <div class="flex justify-between"><span class="text-gray-600">Tanggal</span><span id="receiptDate">-</span></div>
+          <div class="flex justify-between"><span class="text-gray-600">Petugas</span><span id="receiptPetugas">-</span></div>
+          <div class="flex justify-between"><span class="text-gray-600">Pelanggan</span><span id="receiptCustomer">-</span></div>
+        </div>
+        <div class="border-t border-dashed border-gray-300 pt-3 mb-3">
+          <div class="flex justify-between font-medium"><span id="receiptService">-</span><span id="receiptPrice">-</span></div>
+        </div>
+        <div class="border-t border-dashed border-gray-300 pt-3 space-y-1">
+          <div class="flex justify-between"><span class="text-gray-600">Metode Bayar</span><span id="receiptPayment">-</span></div>
+          <div class="flex justify-between text-lg font-bold"><span>Total</span><span id="receiptTotal">-</span></div>
+        </div>
+        <div class="text-center mt-4 pt-4 border-t border-dashed border-gray-300">
+          <p class="text-xs text-gray-600">Terima kasih atas kunjungan Anda!</p>
+          <p class="text-xs text-gray-500 mt-1">~ BAMSCUT ~</p>
+        </div>
+      </div>
+      <div class="flex border-t border-gray-200">
+        <button onclick="printReceipt()" class="flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:bg-gray-100 transition flex items-center justify-center space-x-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          <span>Cetak</span>
+        </button>
+        <button onclick="closeReceipt()" class="flex-1 py-3 text-center text-sm font-semibold bg-gold text-dark hover:bg-gold-light transition">Selesai</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-[100] space-y-2"></div>
+
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" class="hidden fixed inset-0 z-[90] bg-dark/80 backdrop-blur-sm flex items-center justify-center">
+    <div class="text-center">
+      <svg class="animate-spin h-12 w-12 text-gold mx-auto" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+      <p class="text-gold mt-4 font-medium">Memproses...</p>
+    </div>
+  </div>
+
+  <script src="assets/api.js"></script>
+  <script src="assets/auth.js"></script>
+  <script>
+    // Role check
+    Auth.requireRole('Petugas');
+    
+    const session = Auth.getSession();
+    let selectedService = null;
+    let selectedPayment = null;
+    let servicesList = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadServices();
+    });
+
+    // ============ SERVICES ============
+    async function loadServices() {
+      try {
+        const result = await API.getServices();
+        if (result.success) {
+          servicesList = result.data;
+          renderServices();
+        }
+      } catch (e) {
+        showToast('Gagal memuat layanan', 'error');
+      }
+    }
+
+    function renderServices() {
+      const grid = document.getElementById('servicesGrid');
+      if (servicesList.length === 0) {
+        grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">Belum ada layanan</div>';
+        return;
+      }
+      grid.innerHTML = servicesList.map(s => `
+        <button onclick="selectService('${s.id}')" data-sid="${s.id}" class="service-card bg-dark-light border-2 border-dark-lighter rounded-2xl p-4 text-left hover:border-gold transition">
+          <div class="w-10 h-10 rounded-lg bg-gold/20 flex items-center justify-center mb-3">
+            <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"/></svg>
+          </div>
+          <h4 class="font-semibold text-sm mb-1 truncate">${s.nama_layanan}</h4>
+          <p class="text-gold font-bold">${formatCurrency(s.harga)}</p>
+          <p class="text-xs text-gray-500 mt-1">${s.durasi} menit</p>
+        </button>
+      `).join('');
+    }
+
+    function selectService(id) {
+      selectedService = servicesList.find(s => s.id === id);
+      document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+      document.querySelector(`[data-sid="${id}"]`).classList.add('selected');
+      updateSummary();
+    }
+
+    function selectPayment(method) {
+      selectedPayment = method;
+      document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelector(`[data-pay="${method}"]`).classList.add('selected');
+      updateSummary();
+    }
+
+    function updateSummary() {
+      document.getElementById('summaryService').textContent = selectedService ? selectedService.nama_layanan : '-';
+      document.getElementById('summaryPayment').textContent = selectedPayment || '-';
+      document.getElementById('summaryTotal').textContent = selectedService ? formatCurrency(selectedService.harga) : 'Rp 0';
+    }
+
+    // ============ TRANSACTION ============
+    async function processTransaction() {
+      if (!selectedService) {
+        showToast('Pilih layanan terlebih dahulu', 'error');
+        return;
+      }
+      if (!selectedPayment) {
+        showToast('Pilih metode pembayaran', 'error');
+        return;
+      }
+
+      const data = {
+        petugas: session.username,
+        layanan: selectedService.nama_layanan,
+        harga: selectedService.harga,
+        metode_bayar: selectedPayment,
+        pelanggan: document.getElementById('customerName').value.trim() || 'Umum'
+      };
+
+      document.getElementById('loadingOverlay').classList.remove('hidden');
+      try {
+        const result = await API.saveTransaction(data);
+        if (result.success) {
+          showToast('Transaksi berhasil!', 'success');
+          showReceipt({
+            id: result.data.id_transaksi,
+            tanggal: result.data.tanggal,
+            ...data
+          });
+          resetForm();
+        } else {
+          showToast(result.message || 'Gagal menyimpan transaksi', 'error');
+        }
+      } catch (e) {
+        showToast('Terjadi kesalahan', 'error');
+      } finally {
+        document.getElementById('loadingOverlay').classList.add('hidden');
+      }
+    }
+
+    function resetForm() {
+      selectedService = null;
+      selectedPayment = null;
+      document.getElementById('customerName').value = '';
+      document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('selected'));
+      updateSummary();
+    }
+
+    // ============ RECEIPT ============
+    function showReceipt(trx) {
+      document.getElementById('receiptId').textContent = trx.id;
+      document.getElementById('receiptDate').textContent = formatDate(trx.tanggal);
+      document.getElementById('receiptPetugas').textContent = trx.petugas;
+      document.getElementById('receiptCustomer').textContent = trx.pelanggan;
+      document.getElementById('receiptService').textContent = trx.layanan;
+      document.getElementById('receiptPrice').textContent = formatCurrency(trx.harga);
+      document.getElementById('receiptPayment').textContent = trx.metode_bayar;
+      document.getElementById('receiptTotal').textContent = formatCurrency(trx.harga);
+      document.getElementById('receiptModal').classList.remove('hidden');
+    }
+
+    function closeReceipt() {
+      document.getElementById('receiptModal').classList.add('hidden');
+    }
+
+    function printReceipt() {
+      window.print();
+    }
+
+    // ============ HISTORY ============
+    function showSection(name) {
+      document.querySelectorAll('[id^="section-"]').forEach(s => s.classList.add('hidden'));
+      document.getElementById('section-' + name).classList.remove('hidden');
+      if (name === 'history') loadHistory();
+    }
+
+    async function loadHistory() {
+      try {
+        const result = await API.getTransactions({ petugas: session.username });
+        const list = document.getElementById('historyList');
+        if (result.success && result.data.length > 0) {
+          list.innerHTML = result.data.map(t => `
+            <div class="bg-dark-light border border-dark-lighter rounded-2xl p-4">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <p class="font-mono text-xs text-gold">${t.id_transaksi}</p>
+                  <p class="font-medium mt-1">${t.layanan}</p>
+                  <p class="text-xs text-gray-500">${t.pelanggan} • ${t.metode_bayar}</p>
+                </div>
+                <p class="text-gold font-bold">${formatCurrency(t.harga)}</p>
+              </div>
+              <p class="text-xs text-gray-500">${formatDate(t.tanggal)}</p>
+            </div>
+          `).join('');
+        } else {
+          list.innerHTML = '<div class="text-center text-gray-500 py-8">Belum ada transaksi</div>';
+        }
+      } catch (e) {
+        showToast('Gagal memuat riwayat', 'error');
+      }
+    }
+
+    function logout() {
+      if (confirm('Yakin ingin keluar?')) {
+        Auth.clearSession();
+        window.location.href = 'login.html';
+      }
+    }
+
+    // ============ UTILITIES ============
+    function formatCurrency(num) {
+      return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const colors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-gold text-dark' };
+      toast.className = `${colors[type] || colors.info} px-6 py-3 rounded-xl shadow-lg transform translate-x-full transition-transform duration-300 font-medium`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.remove('translate-x-full'), 10);
+      setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
